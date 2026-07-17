@@ -1,0 +1,137 @@
+============================================
+1. 整体说明
+============================================
+目的：将模型推理封装为异步推理的方式
+核心思想：使用 multiple producer process 和 consumers process 的方式，将推理任务放到 task queue 中，模型从 task queue 中获取推理任务进行推理，并将结果通过 task queue 返回。整体是异步的方式，出去 schedul 中组 batch 是非阻塞的 queue，其余均为阻塞。
+注：阻塞是会释放线程的调度权。
+
+============================================
+2. 核心实现说明
+============================================
+2.1 采用多进程的方式
+--------------------------------------------
+2.1.1 由于 python GIL 的存在，因此单个进程中无法充分利用 cpu 的资源，且模型的推理一般会放置在 gpu 上进行，其 context 的设置最好对进程进行设置，因此模型推理的任务需要单独放到一个进程中。
+2.1.2 由于 python GIL 的存在，因此单个进程中无法充分利用 cpu 的资源，因此 采用非阻塞 queue 实现自动组合 batch 的 scheduler for combine batch 也需要单独的一个进程。
+2.1.3 主进程负责分发任务，单独的进程。
+
+--------------------------------------------
+2.2 多进程和队列
+--------------------------------------------
+队列中需要放置任务需要的多种数据
+python的 multiprocessing.queue.Queue() 是基于 multiprocessing 模块内部的 管道（pipe）和锁（lock） 机制来实现的。
+pytorch 自行维护一套 multiprocessing，在该 multiprocessing 中，张量可以直接放入 multiprocessing.Queue 中，从而在进程之间传递。PyTorch 会处理底层的共享内存问题，使得张量在不同进程之间传递时不会产生额外的拷贝开销。
+结合上述两点，为了减少数据的 copy ，因此所有 多进程 的启动采用 torch.multiprocessing，队列使用 torch.multiprocessing.queue。
+
+torch 的 python 实现部分在/root/miniconda3/lib/python3.10/site-packages/torch/multiprocessing/中，/root/miniconda3/lib/python3.10/site-packages/torch/multiprocessing/reductions.py中的 rebuild_tensor 函数会对数据进行重构，重构会对共享的 data 加 storage 形成该进程下的新的 tensor。
+
+============================================
+3. 使用方法
+============================================
+3.1 环境依赖
+--------------------------------------------
+需要有 pytorch 的环境
+--------------------------------------------
+3.2 实现方法
+--------------------------------------------
+
+import torch
+import uuid
+from core.model import BaseModel_WorkerConfig, BaseModelWorker
+from core.request import Request_Single, Request_Batch
+
+class ExampleModelWorker(BaseModelWorker):
+    # implement a singleton pattern for the ExampleModelWorker class
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    def __init__(self, basemodel_workerconfig, config_file):
+        super(ExampleModelWorker, self).__init__(basemodel_workerconfig, config_file)
+    def model_init(self, process_idx, config_file):
+        # Model Init 
+        {
+            # Model Load from config_file:{yaml, Custom Configuration Class}
+
+            # Model to { GPU, CPU } accroding process_idx
+
+            # Can have multiple sub-models
+        }
+        
+        # return model list
+        return [model_00, model_01]
+
+    def forward(self, process_idx, model_list, request_batch, batch_input_tensor_list):
+        # Model Forward
+        {
+            # batch_input_tensor: Data from request_single has been copied to the corresponding batch_tensor.
+            # batch_input_tensor_list = [ batch_input_tensor_00, batch_input_tensor_01, ...]
+            # use function
+            output_tensor_00, output_tensor_01 = model_00.forward(batch_input_tensor_list[0], batch_input_tensor_list[1])
+        }
+        # tensor_xx should be [ batch, dim_1, dim_2]
+        return [ tensor_00, tensor_01]
+        # After returning, the results in batch_out_tensor will automatically be copied to the corresponding output lists in request_single.
+
+class Request_Single_v1(Request_Single):
+    def __init__(self, uuid):
+        super().__init__(uuid)
+        # Increase the required parameters.
+        self.input_para_list = []
+
+    # Increase the required parameters function.
+    def set_input_para(self, input_papra):
+        self.input_para_list.append(input_papra)
+
+    # Override the print function.
+    def __str__(self):
+        parent_info = super().__str__()
+        return f'--> [ {ColorsLog.YELLOW}name{ColorsLog.RESET}: {self.name} , {parent_info}, {ColorsLog.YELLOW}input_para{ColorsLog.RESET}: {self.input_para} ]'
+
+def main():
+    # 1. configuration file for model initialization.
+    config_file = './config.yaml'
+    # 2. Create a configuration file for the model worker, where 
+    # model_name is the name of the model;
+    # model_num is the number of models to create;
+    # combine_batch_wait_time is the maximum wait time for dynamic batching in milliseconds;
+    # max_batch_size is the maximum batch size for dynamic batching.              
+    basemodel_workerconfig = BaseModel_WorkerConfig()
+    basemodel_workerconfig.model_name = 'AsrModel'
+    basemodel_workerconfig.model_num = 2
+    basemodel_workerconfig.combine_batch_wait_time = 300 # ms
+    basemodel_workerconfig.max_batch_size = 32
+    # 3. To instantiate model workers based on the provided configuration
+    # Global Unique
+    asr_model_worker = ExampleModelWorker(basemodel_workerconfig, config_file)
+    # 4. To start worker processes and handle asynchronous requests
+    asr_model_worker.start()
+
+    # 5. To create multiple independent requests, each with its own tensor for model inference, you can use Python's multiprocessing module to handle concurrency
+    request_list = []
+    for i in range(100):
+        # 5.1 Request_Single( uuid: Stirng ) : uuid should be global unique
+        request_01 = Request_Single_v1("test_" + str(uuid.uuid4()) + "_" + str(i) + "_0")
+        # 5.2 Create input_tensor_00, and set tensor.share_memory_()
+        input_10 = torch.randint(low=-32768, high=32767, size=(1, 16000 * 30), dtype=torch.int16)
+        input_10.share_memory_()
+        input_10 = input_10 * 0 + 2
+        # 5.3 Create input_tensor_00, and set tensor.share_memory_()
+        input_11 = torch.rand(1024, 256)
+        input_11.share_memory_()
+        input_11 = input_11 * 0 + 3.0
+        # 5.4 Input input_tensor_xx into list
+        input_list_1 = [input_10, input_11]
+        # 5.5 Put the input tensor into each request in request_single,
+        request_02.Set_Input(input_list_1)
+
+        request_list.append(request_01)
+        # 6. Put the request_single into the task queue for processing by multiple worker processes
+        asr_model_worker.add_request(request_single)
+
+    for i in range(100):
+        # 7. Waiting for the task to finish and obtaining the result
+        request_single = request_list[i]
+        asr_model_worker.add_request(request_single)
+        output_tensor_list = result_request.get_batch_result()
+

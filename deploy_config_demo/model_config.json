@@ -1,0 +1,6 @@
+{
+    "backend_acoustic_model": "./xx/",  
+    "backend_vocoder_model": "./xx", 
+    "front_model": "./front_model",
+    "run_mode": 0
+}
