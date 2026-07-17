@@ -45,7 +45,7 @@ from .num import RE_DIGIT_CHARS, RE_CHARS_DIGIT, replace_digit_char, replace_cha
 from .num import RE_KEYWORD_NUM_DIGIT, replace_keyword_num_digit, RE_KEYWORD_NUM_CARDINAL, replace_keyword_num_cardinal
 from .num import RE_KEYWORD_REFDOC, replace_keyword_refdoc, RE_REFDOC_KEYWORD, replace_refdoc_keyword, RE_REFDOC_BLANK, replace_refdoc_blank
 from .num import RE_NUMBERING, replace_numbering
-from .symbol import remove_paired_bracket_content, replace_hyphen_after_capital_word, handle_incomplete_brackets
+from .symbol import replace_hyphen_after_capital_word, handle_incomplete_brackets
 from .phonecode import RE_MOBILE_PHONE
 from .phonecode import RE_NATIONAL_UNIFORM_NUMBER
 from .phonecode import RE_TELEPHONE
@@ -70,6 +70,11 @@ from jttts.tts_common.logger import logger
 from bs4 import BeautifulSoup
 import pdb
 from jttts.tts_common.tts_fileencoder import check_encrypt_file_valid, text_file_decrypt
+from jttts.tts_model.frontend.text_preprocessing import (
+    normalize_html_entities,
+    strip_bracket_marks,
+    verbalize_math_symbols,
+)
 
 
 class TextNormalizer():
@@ -328,10 +333,12 @@ class TextNormalizer():
         return sentence
 
     def normalize_sentence(self, sentence: str) -> str:
+        sentence = normalize_html_entities(sentence)
         sentence = tranditional_to_simplified(sentence)
         #将不支持的符号转换为支持的符号
         sentence = trans_to_identify(sentence)
         sentence = sentence.translate(F2H_ASCII_LETTERS).translate(F2H_DIGITS).translate(F2H_SPACE)
+        sentence = verbalize_math_symbols(sentence)
         try:
             # pdb.set_trace()
             # basic character conversions
@@ -467,8 +474,8 @@ class TextNormalizer():
             # "123","-123","123.45","-123.45",".45","-.45",
             sentence = RE_NUMBER.sub(replace_number_default, sentence)
 
-            # """移除文本中所有成对出现的括号及其内部内容，保留不成对的括号"""
-            sentence = remove_paired_bracket_content(sentence)
+            # 括号本身无需发音，但括号内的示例、说明等正文需要保留。
+            sentence = strip_bracket_marks(sentence)
 
 
             
