@@ -43,6 +43,20 @@ class TextPreprocessingTest(unittest.TestCase):
             "小于1、大于2、小于等于3、大于等于4、不等于5",
         )
 
+    def test_verbalizes_fullwidth_less_than_inside_brackets(self):
+        text = "🧠 **正常情况下**：淋巴结很小（直径＜1cm）"
+
+        self.assertEqual(
+            verbalize_math_symbols(text),
+            "🧠 **正常情况下**：淋巴结很小（直径小于1cm）",
+        )
+
+    def test_verbalizes_other_fullwidth_comparison_symbols(self):
+        self.assertEqual(
+            verbalize_math_symbols("＜1、＞2、＜＝3、＞＝4、≦5、≧6、＝7"),
+            "小于1、大于2、小于等于3、大于等于4、小于等于5、大于等于6、等于7",
+        )
+
     def test_verbalizes_arithmetic_entities(self):
         text = "2&times;3、6&divide;2、&plusmn;5"
 
