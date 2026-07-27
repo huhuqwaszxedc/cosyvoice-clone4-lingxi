@@ -143,6 +143,7 @@ def Voice_Clone(Requst_Text = None, base_url = None, access_token = None, enable
     RequestDic['sample_rate']  =   24000
     RequestDic['streaming_mode']  =   False
     RequestDic['encoding']    =   'wav'  # 'raw' or 'wav'
+    RequestDic['filter_bracket_content'] = False  # True 时不合成括号及括号内文字
 
     # 配置超时时间（秒）
     CONNECT_TIMEOUT = 3  # 连接超时：建立TCP连接的最长时间

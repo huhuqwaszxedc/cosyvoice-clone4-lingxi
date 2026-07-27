@@ -218,6 +218,7 @@ class Voice_Clone_Payload(BaseModel):
     encoding: str = GlobalConfigInst.default_encoding
     language: str = 'auto'
     debug_mode: int = 0
+    filter_bracket_content: bool = False
 
 @APP.post("/jttts/TTSInfer")
 @APP.post("/jttts/Voice_Clone")

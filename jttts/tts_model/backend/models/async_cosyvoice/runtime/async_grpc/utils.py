@@ -189,6 +189,9 @@ async def Voice_Clone_grpc_Warmup(base_url = None):
 
         if 'encoding' in RequestDic.keys():
             request.encoding         = RequestDic['encoding']
+
+        if 'filter_bracket_content' in RequestDic.keys():
+            request.filter_bracket_content = RequestDic['filter_bracket_content']
         
         return request
 

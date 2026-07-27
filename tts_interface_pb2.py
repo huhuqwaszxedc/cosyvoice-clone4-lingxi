@@ -11,9 +11,34 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13tts_interface.proto\x12\tttsserver\"\x95\x01\n\x16RegisterSpeakerRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\x12\x12\n\nspeaker_id\x18\x03 \x01(\t\x12\x1a\n\x12upload_prompt_text\x18\x04 \x01(\t\x12\x12\n\nprompt_wav\x18\x05 \x01(\x0c\x12\x12\n\nprompt_num\x18\x06 \x01(\x05\"\xd4\x01\n\x11TtsServiceRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\n \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\x12\x12\n\nspeaker_id\x18\x03 \x01(\t\x12\x0e\n\x06if_ver\x18\x04 \x01(\r\x12\x13\n\x0bspeed_ratio\x18\x05 \x01(\x02\x12\x14\n\x0cvolume_ratio\x18\x06 \x01(\x02\x12\x13\n\x0bsample_rate\x18\x07 \x01(\r\x12\x16\n\x0estreaming_mode\x18\x08 \x01(\x08\x12\x10\n\x08\x65ncoding\x18\t \x01(\t\"\x88\x01\n\x08Response\x12\x12\n\naudio_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x65ncoding\x18\x02 \x01(\t\x12\x14\n\x0cResultStatus\x18\x03 \x01(\r\x12\x0b\n\x03Msg\x18\x04 \x01(\t\x12\x13\n\x0bsample_rate\x18\x05 \x01(\r\x12\x10\n\x08sequence\x18\x06 \x01(\x05\x12\x0c\n\x04\x41IGC\x18\x07 \x01(\t2\xe0\x01\n\x05\x63lone\x12\x42\n\tInference\x12\x1c.ttsserver.TtsServiceRequest\x1a\x13.ttsserver.Response\"\x00\x30\x01\x12J\n\x0fStreamInference\x12\x1c.ttsserver.TtsServiceRequest\x1a\x13.ttsserver.Response\"\x00(\x01\x30\x01\x12G\n\x0bRegisterSpk\x12!.ttsserver.RegisterSpeakerRequest\x1a\x13.ttsserver.Response\"\x00\x42\tZ\x07protos/b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(bytes.fromhex(
+    "0a137474735f696e746572666163652e70726f746f1209747473736572766572"
+    "2295010a165265676973746572537065616b65725265717565737412120a0a72"
+    "6571756573745f6964180120012809120f0a07757365725f6964180220012809"
+    "12120a0a737065616b65725f6964180320012809121a0a1275706c6f61645f70"
+    "726f6d70745f7465787418042001280912120a0a70726f6d70745f7761761805"
+    "2001280c12120a0a70726f6d70745f6e756d18062001280522f4010a11547473"
+    "536572766963655265717565737412120a0a726571756573745f69641801200128"
+    "09120c0a0474657874180a20012809120f0a07757365725f6964180220012809"
+    "12120a0a737065616b65725f6964180320012809120e0a0669665f7665721804"
+    "2001280d12130a0b73706565645f726174696f18052001280212140a0c766f6c"
+    "756d655f726174696f18062001280212130a0b73616d706c655f726174651807"
+    "2001280d12160a0e73747265616d696e675f6d6f646518082001280812100a08"
+    "656e636f64696e67180920012809121e0a1666696c7465725f627261636b6574"
+    "5f636f6e74656e74180b200128082288010a08526573706f6e736512120a0a61"
+    "7564696f5f6461746118012001280c12100a08656e636f64696e671802200128"
+    "0912140a0c526573756c7453746174757318032001280d120b0a034d73671804"
+    "2001280912130a0b73616d706c655f7261746518052001280d12100a08736571"
+    "75656e6365180620012805120c0a044149474318072001280932da010a05636c"
+    "6f6e6512400a09496e666572656e6365121c2e7474737365727665722e547473"
+    "53657276696365526571756573741a132e7474737365727665722e526573706f"
+    "6e7365300112480a0f53747265616d496e666572656e6365121c2e7474737365"
+    "727665722e54747353657276696365526571756573741a132e7474737365727665"
+    "722e526573706f6e73652801300112450a0b526567697374657253706b12212e"
+    "7474737365727665722e5265676973746572537065616b657252657175657374"
+    "1a132e7474737365727665722e526573706f6e736542095a0770726f746f732f"
+    "620670726f746f33"
+))
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,9 +50,9 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_REGISTERSPEAKERREQUEST']._serialized_start=35
   _globals['_REGISTERSPEAKERREQUEST']._serialized_end=184
   _globals['_TTSSERVICEREQUEST']._serialized_start=187
-  _globals['_TTSSERVICEREQUEST']._serialized_end=399
-  _globals['_RESPONSE']._serialized_start=402
-  _globals['_RESPONSE']._serialized_end=538
-  _globals['_CLONE']._serialized_start=541
-  _globals['_CLONE']._serialized_end=765
+  _globals['_TTSSERVICEREQUEST']._serialized_end=431
+  _globals['_RESPONSE']._serialized_start=434
+  _globals['_RESPONSE']._serialized_end=570
+  _globals['_CLONE']._serialized_start=573
+  _globals['_CLONE']._serialized_end=791
 # @@protoc_insertion_point(module_scope)

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package ttsserver;
+
+option go_package = "protos/";
+
+message RegisterSpeakerRequest {
+  string request_id = 1;
+  string user_id = 2;
+  string speaker_id = 3;
+  string upload_prompt_text = 4;
+  bytes prompt_wav = 5;
+  int32 prompt_num = 6;
+}
+
+message TtsServiceRequest {
+  string request_id = 1;
+  string text = 10;
+  string user_id = 2;
+  string speaker_id = 3;
+  uint32 if_ver = 4;
+  float speed_ratio = 5;
+  float volume_ratio = 6;
+  uint32 sample_rate = 7;
+  bool streaming_mode = 8;
+  string encoding = 9;
+  // When true, balanced brackets and all enclosed text are removed before TN.
+  bool filter_bracket_content = 11;
+}
+
+message Response {
+  bytes audio_data = 1;
+  string encoding = 2;
+  uint32 ResultStatus = 3;
+  string Msg = 4;
+  uint32 sample_rate = 5;
+  int32 sequence = 6;
+  string AIGC = 7;
+}
+
+service clone {
+  rpc Inference(TtsServiceRequest) returns (stream Response);
+  rpc StreamInference(stream TtsServiceRequest) returns (stream Response);
+  rpc RegisterSpk(RegisterSpeakerRequest) returns (Response);
+}

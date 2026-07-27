@@ -207,6 +207,7 @@ class GrpcServiceImpl(tts_interface_pb2_grpc.cloneServicer):
             "sample_rate":      getattr(request, "sample_rate", ""),
             "streaming_mode":   getattr(request, "streaming_mode", ""),
             "encoding":         getattr(request, "encoding", ""),
+            "filter_bracket_content": getattr(request, "filter_bracket_content", False),
         }
         saved_id = ''
         if GlobalConfigInst.save_middle_result == 1:
@@ -233,6 +234,7 @@ class GrpcServiceImpl(tts_interface_pb2_grpc.cloneServicer):
             "encoding":         getattr(request, "encoding", GlobalConfigInst.default_encoding),
             "language":         getattr(request, "language", "auto"),
             "debug_mode":       getattr(request, "debug_mode", 0),
+            "filter_bracket_content": getattr(request, "filter_bracket_content", False),
         }
         if len(saved_id)>0:
             raw_dict['saved_id'] = saved_id

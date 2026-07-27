@@ -3,6 +3,7 @@
 
 import re
 from jttts.tts_common.logger import logger
+from jttts.tts_model.frontend.text_preprocessing import remove_bracketed_content
 import pdb
 
 
@@ -17,27 +18,9 @@ BRACKET_PAIRS = {
     '｛': '｝'
 }
 
-# 生成匹配所有成对括号的正则表达式
-# 对每种括号对生成专用模式，确保左右括号匹配
-patterns = []
-for left, right in BRACKET_PAIRS.items():
-    # 转义特殊字符，匹配成对括号及其中内容（非贪婪模式）
-    patterns.append(re.escape(left) + r'.*?' + re.escape(right))
-
-# 合并所有模式，编译为正则对象
-RE_PAIRED_BRACKET = re.compile('|'.join(patterns))
-
-def replace_paired_bracket(match):
-    """替换函数：将匹配到的成对括号及内容替换为空字符串"""
-    return ''
-
 def remove_paired_bracket_content(text):
     """移除文本中所有成对出现的括号及其内部内容，保留不成对的括号"""
-    # 处理嵌套括号：循环替换直到无匹配（每次处理最内层成对括号）
-    while RE_PAIRED_BRACKET.search(text):
-        # 使用指定格式：text = RE.sub(replace_func, text)
-        text = RE_PAIRED_BRACKET.sub(replace_paired_bracket, text)
-    return text
+    return remove_bracketed_content(text)
 
 
 # ****************************移除不成对的括号左边或者右边的内容******************************************************************

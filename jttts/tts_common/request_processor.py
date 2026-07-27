@@ -18,6 +18,9 @@ from tempfile import NamedTemporaryFile
 from jttts.tts_engine.external_models.model import RemoveSil_Model
 from typing import Tuple, Union, Dict, Any
 from jttts.tts_common.common_utils import check_contain_valid_str
+from jttts.tts_model.frontend.text_preprocessing import (
+    apply_bracket_content_filter,
+)
 
 
 def convert_to_single_channel_audiobytes(src_audio_path = None):
@@ -162,6 +165,8 @@ def _prepare_voice_clone_request(
             - encoding (str)
             - language (str)
             - debug_mode (int)
+            - filter_bracket_content (bool, optional): remove balanced brackets
+              and all enclosed text before the normal text preprocessing
 
     Returns:
         (True, enriched_req_dict) if valid
@@ -181,7 +186,17 @@ def _prepare_voice_clone_request(
         "encoding":         raw_payload.get("encoding", GlobalConfigInst.default_encoding),
         "language":         raw_payload.get("language", "auto"),
         "debug_mode":       raw_payload.get("debug_mode", 0),
+        "filter_bracket_content": raw_payload.get("filter_bracket_content", False),
     }
+
+    filter_bracket_content = req["filter_bracket_content"]
+    if isinstance(filter_bracket_content, str):
+        filter_bracket_content = filter_bracket_content.strip().lower() in {
+            "1", "true", "yes", "on"
+        }
+    else:
+        filter_bracket_content = bool(filter_bracket_content)
+    req["filter_bracket_content"] = filter_bracket_content
 
     for key in raw_payload:
         if key not in req:
@@ -235,6 +250,13 @@ def _prepare_voice_clone_request(
         return False, "text is required"
     if not check_contain_valid_str(text):
         return False, f"text is not contain valid symbol, text={text}"
+
+    req["text"] = apply_bracket_content_filter(
+        text,
+        enabled=req["filter_bracket_content"],
+    )
+    if req["filter_bracket_content"] and not check_contain_valid_str(req["text"]):
+        return False, "text is empty after filtering bracket content"
 
     # === 5. encoding 校验 ===
     if req["encoding"] not in ["pcm","wav", "raw"]:
@@ -479,6 +501,5 @@ async def run_denoise_and_register_in_background_async(
         cosyvoice_frontend=cosyvoice_frontend,
         sample_rate_model=sample_rate_model,
     )
-
 
 

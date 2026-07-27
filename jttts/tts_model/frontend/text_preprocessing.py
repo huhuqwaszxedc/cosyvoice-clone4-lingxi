@@ -35,6 +35,15 @@ _SUPPORTED_HTML_ENTITY = re.compile(
 )
 
 _BRACKET_MARKS = str.maketrans("", "", "()[]{}（）【】｛｝")
+_BRACKET_PAIRS = {
+    "(": ")",
+    "[": "]",
+    "{": "}",
+    "（": "）",
+    "【": "】",
+    "｛": "｝",
+}
+_CLOSING_BRACKETS = {right: left for left, right in _BRACKET_PAIRS.items()}
 
 
 def normalize_html_entities(text: str) -> str:
@@ -82,3 +91,44 @@ def strip_bracket_marks(text: str) -> str:
     """Remove bracket marks while retaining their spoken content."""
 
     return text.translate(_BRACKET_MARKS)
+
+
+def remove_bracketed_content(text: str) -> str:
+    """Remove balanced brackets together with their enclosed content.
+
+    Nested bracket pairs are supported. Unmatched brackets are preserved so
+    malformed input does not unexpectedly discard the remaining text.
+    """
+
+    stack = []
+    ranges = []
+
+    for index, character in enumerate(text):
+        if character in _BRACKET_PAIRS:
+            stack.append((character, index))
+            continue
+
+        expected_left = _CLOSING_BRACKETS.get(character)
+        if expected_left is None or not stack or stack[-1][0] != expected_left:
+            continue
+
+        _, start = stack.pop()
+        if not stack:
+            ranges.append((start, index + 1))
+
+    if not ranges:
+        return text
+
+    parts = []
+    cursor = 0
+    for start, end in ranges:
+        parts.append(text[cursor:start])
+        cursor = end
+    parts.append(text[cursor:])
+    return "".join(parts)
+
+
+def apply_bracket_content_filter(text: str, enabled: bool = False) -> str:
+    """Optionally remove balanced brackets and their enclosed content."""
+
+    return remove_bracketed_content(text) if enabled else text

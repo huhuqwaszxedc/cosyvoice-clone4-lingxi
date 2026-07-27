@@ -1,7 +1,9 @@
 import unittest
 
 from jttts.tts_model.frontend.text_preprocessing import (
+    apply_bracket_content_filter,
     normalize_html_entities,
+    remove_bracketed_content,
     strip_bracket_marks,
     verbalize_math_symbols,
 )
@@ -72,6 +74,34 @@ class TextPreprocessingTest(unittest.TestCase):
 
     def test_keeps_content_inside_brackets(self):
         self.assertEqual(strip_bracket_marks("号码（如“选1”）"), "号码如“选1”")
+
+    def test_bracket_filter_is_disabled_by_default(self):
+        text = "请播报（这段也要播报）正文"
+
+        self.assertEqual(apply_bracket_content_filter(text), text)
+
+    def test_removes_brackets_and_enclosed_content_when_enabled(self):
+        text = "请播报（这段不要播报）正文"
+
+        self.assertEqual(
+            apply_bracket_content_filter(text, enabled=True),
+            "请播报正文",
+        )
+
+    def test_removes_supported_bracket_types(self):
+        text = "甲(a)乙[b]丙{c}丁（d）戊【e】己｛f｝庚"
+
+        self.assertEqual(remove_bracketed_content(text), "甲乙丙丁戊己庚")
+
+    def test_removes_nested_and_multiple_bracket_groups(self):
+        text = "开始（外层【内层】结束）中间(test)完成"
+
+        self.assertEqual(remove_bracketed_content(text), "开始中间完成")
+
+    def test_preserves_unmatched_brackets(self):
+        text = "开始（未结束，正文继续"
+
+        self.assertEqual(remove_bracketed_content(text), text)
 
 
 if __name__ == "__main__":
